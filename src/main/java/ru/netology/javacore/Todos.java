@@ -1,49 +1,32 @@
 package ru.netology.javacore;
 
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
 public class Todos {
-
-    @Getter
-    static class Task {
-
-        private String type;
-        private String task;
-
-        Task() {
-        }
-
-        @Override
-        public String toString() {
-            return "Task [type=" + type + ", task=" + task + "]";
-        }
-    }
-
-    private final List<String> tasks = new ArrayList<>();
+    List<String> list = new ArrayList<>();
+    String type;
+    String task;
 
     public void addTask(String task) {
-        tasks.add(task);
-        Collections.sort(tasks);
+        list.add(task);
     }
 
     public void removeTask(String task) {
-
-        tasks.remove(task);
+        list.remove(task);
     }
 
     public String getAllTasks() {
 
-        return tasks.toString();
+        StringBuilder builder = new StringBuilder();
+        Collections.sort(list);
+        for (String task : list) {
+            builder.append(task + " ");
+        }
+        return builder.toString();
     }
 
-    public String getTasksElementByIndex(int index) {
-
-        return tasks.get(index);
-    }
 
 }
-

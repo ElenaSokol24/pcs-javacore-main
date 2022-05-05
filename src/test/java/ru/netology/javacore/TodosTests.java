@@ -1,72 +1,43 @@
 package ru.netology.javacore;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TodosTests {
-
-    static Todos todos = null;
-
-    @BeforeEach
-    public void init() {
-        System.out.println("test started");
-        todos = new Todos();
-    }
-
-    @BeforeAll
-    public static void started() {
-        System.out.println("tests started");
-    }
-
-    @AfterEach
-    public void finished() {
-        System.out.println("test finished");
-    }
-
-    @AfterAll
-    public static void finishedAll() {
-        System.out.println("tests finishedAll");
-    }
+    Todos todos = new Todos();
+    Todos todos1 = new Todos();
+    Todos todos2 = new Todos();
 
     @Test
     public void testAddTask() {
-        //arrange
-        String task = "Пробежка", expected = "Пробежка";
-        //act
-        todos.addTask(task);
-        String result = todos.getTasksElementByIndex(0);
-        //assert
-        assertEquals(expected, result);
-    }
+        boolean expected = true;
+        todos.addTask("A");
+        boolean result = todos.list.contains("A");
 
-    @Test
-    public void testSortTasks() {
-        //arrange
-        String expected = "[Выучить уроки, Завтрак, Поспать, Умыться]";
-        //act
-        todos.addTask("Поспать");
-        todos.addTask("Умыться");
-        todos.addTask("Завтрак");
-        todos.addTask("Выучить уроки");
-
-        String result = todos.getAllTasks();
-        //assert
-        assertEquals(expected, result);
+        Assertions.assertEquals(expected, result);
     }
 
     @Test
     public void testRemoveTask() {
-        //arrange
-        String expected = "[Выучить уроки, Поспать, Умыться]";
-        //act
-        todos.addTask("Поспать");
-        todos.addTask("Умыться");
-        todos.addTask("Завтрак");
-        todos.addTask("Выучить уроки");
-        todos.removeTask("Завтрак");
-        String result = todos.getAllTasks();
-        //assert
-        assertEquals(expected, result);
+        boolean expected = false;
+        todos1.addTask("Breakfast");
+        todos1.removeTask("Breakfast");
+        boolean result = todos1.list.contains("Breakfast");
+
+        Assertions.assertEquals(expected, result);
     }
+
+    @Test
+    public void testGetAllTasks() {
+        String expected = "A B Breakfast ";
+        todos2.addTask("Breakfast");
+        todos2.addTask("A");
+        todos2.addTask("B");
+        String result = todos2.getAllTasks();
+
+        Assertions.assertEquals(expected, result);
+    }
+
+
 }
