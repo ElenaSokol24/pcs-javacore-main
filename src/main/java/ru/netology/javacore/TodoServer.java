@@ -11,9 +11,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class TodoServer {
-
-    int port;
-    Todos todos;
+    private Todos todos;
+    private int port;
+    GsonBuilder builder = new GsonBuilder();
+    Gson gson = builder.create();
 
     public TodoServer(int port, Todos todos) {
         this.port = port;
@@ -21,24 +22,37 @@ public class TodoServer {
     }
 
     public void start() throws IOException {
-        System.out.println("Starting server at " + port + "...");
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
 
-        while (true) {
-            ServerSocket serverSocket = new ServerSocket(port);
-            Socket connection = serverSocket.accept();
-            PrintWriter out = new PrintWriter(connection.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            GsonBuilder builder = new GsonBuilder();
-            Gson gson = builder.create();
-            String name = in.readLine();
-            Todos todos = gson.fromJson(name, Todos.class);
-            if (todos.type.equals("ADD")) {
-                todos.addTask(todos.task);
-            } else if (todos.type.equals("REMOVE")) {
-                todos.removeTask(todos.task);
+            System.out.println("Starting server at " + port + "...");
+
+            String input;
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                input = in.readLine();
+                Task task = gson.fromJson(input, Task.class);
+                switch (task.getType()) {
+                    case "ADD":
+                        todos.addTask(task.getTask());
+                        break;
+                    case "REMOVE":
+                        if (todos.isTaskStatus()) {
+                            todos.removeTask(task.getTask());
+                            break;
+                        } else {
+                            break;
+                        }
+                }
+                out.println(todos.getAllTasks());
+                in.close();
+                out.close();
             }
-            out.println(todos.getAllTasks());
-            serverSocket.close();
+        } catch (Error err) {
+            System.out.println("Stream closed");
         }
     }
 }
+
