@@ -2,19 +2,20 @@ package ru.netology.javacore;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 
 public class TodoServer {
-    private Todos todos;
     private int port;
-    GsonBuilder builder = new GsonBuilder();
-    Gson gson = builder.create();
+    private Todos todos;
 
     public TodoServer(int port, Todos todos) {
         this.port = port;
@@ -22,37 +23,53 @@ public class TodoServer {
     }
 
     public void start() throws IOException {
+
+        System.out.println("Starting server at " + port + "...");
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-
-            System.out.println("Starting server at " + port + "...");
-
-            String input;
-
             while (true) {
-                Socket clientSocket = serverSocket.accept();
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                input = in.readLine();
-                Task task = gson.fromJson(input, Task.class);
-                switch (task.getType()) {
-                    case "ADD":
-                        todos.addTask(task.getTask());
-                        break;
-                    case "REMOVE":
-                        if (todos.isTaskStatus()) {
-                            todos.removeTask(task.getTask());
-                            break;
+                try (Socket clientSocket = serverSocket.accept(); // ждем подключения
+                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+
+                    String jsonTask = in.readLine();
+                    Map<String, String> map = jsonToMap(jsonTask);
+
+                    String action = "", task = "";
+                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                        String key = entry.getKey();
+                        String value = entry.getValue();
+                        if (key.equals("type")) {
+                            action = value;
                         } else {
-                            break;
+                            task = value;
                         }
+                    }
+
+                    if (action.equals("ADD")) {
+                        todos.addTask(task);
+                    } else if (action.equals("REMOVE")) {
+                        todos.removeTask(task);
+                    }
+
+                    out.println(todos.getAllTasks());
+
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                out.println(todos.getAllTasks());
-                in.close();
-                out.close();
             }
-        } catch (Error err) {
-            System.out.println("Stream closed");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-}
 
+    private static Map<String, String> jsonToMap(String jsonText) {
+
+        Type mapType = new TypeToken<Map<String, String>>() {
+        }.getType();
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        Map<String, String> map = gson.fromJson(jsonText, mapType);
+        return map;
+    }
+}
